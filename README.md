@@ -6,10 +6,12 @@ My 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 (IN EDITOR)
 Old DOTS: 4330
 REMOVE LEG COMP - DOTS: 4650 + ~7%
-ASM: ??
+
+ASM: Am dumb and don't know how to run it :)
 
 Removing the LinkedEntityGroup component works since bees have no hierachy, and saves us 144 bytes per entity (bee) which is 14.4 MB saved for 100k bees.
-It brings the Chunk entity count up from 46 to 80 ( 73 % increase)
+It brings the Chunk entity count up from 46 to 80 ( 73 % increase), which gives us better memory ulitisation and slightly better performance. 
+Note, this was 3 lines of code, so, very much worth it.
 
 
 ![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/fe7081d8-948c-40fc-9ee7-3e4b8ca4973f)
@@ -32,8 +34,16 @@ And we dont have to use the team component at all inside the job, which results 
 Implementing the change to pass in an array of all entities on this team and using a lookup for the position, is 0.2MB (50k * 4 bytes per entity), Didn't actually help as much as I wouldve thought.
 
 But, now the 30 seconds frame benches is giving us a better score
-Less Memory - DOTS: 4750 + ~2%.
+Less Memory + JobChunk - DOTS: 4750 + ~2%.
 
 I think this is because the entities memory usage according to the profiler is ~24 MB, and my cpu has 64 MB of L3 cache, so it might provide a bigger memory saving for cpus with less cache.
-Additionally it might also be caused by the fact that there are a lot of structural changes, which I will take a look at now.
+Additionally it might also be caused by the fact that there are a lot of structural changes.
 
+
+Now lets take a look at the attacksystem instead. Since it is one of the biggest time consumers, and one quick change is to move the check for target is dead, into the targeting system
+where it probably should have been from the beginning. This is since it removes a branch from the attack system which can't be predicted, and the desired behaviour is for a bee to always have a target when attacking, which it now has.
+
+Attack Job Chunk - DOTS: 4820 + ~1%
+
+
+The biggest offender is adding / removing the "Alive" and "Dead" components, so if we can make the Alive component into an IEnableableComponent and use that to set entities as alive and dead, by toggling it on and off, we can prevent the structural changes from adding/removing these two components. This does however require a pretty big change in the codebase...
