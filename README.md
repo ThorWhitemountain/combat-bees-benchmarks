@@ -5,6 +5,7 @@ My 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 
 (IN EDITOR)
 Old DOTS: 4330
+
 REMOVE LEG COMP - DOTS: 4650 + ~7%
 
 ASM: Am dumb and don't know how to run it :)
