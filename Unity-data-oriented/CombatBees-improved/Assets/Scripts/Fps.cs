@@ -1,4 +1,5 @@
 
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -42,17 +43,25 @@ public class Fps : MonoBehaviour
 
     int GetBeeCount()
     {
+        int beeCount = 0;
         if (BeeManager.instance)
         {
-            return BeeManager.instance.bees.Count;
+            beeCount= BeeManager.instance.bees.Count;
         }
         else if (BeeSpawner.instance)
         {
-            return BeeSpawner.instance.teamsOfBees[0].Count + BeeSpawner.instance.teamsOfBees[1].Count;
+            beeCount= BeeSpawner.instance.teamsOfBees[0].Count + BeeSpawner.instance.teamsOfBees[1].Count;
         }
         else
         {
-            return Data.AliveCount[0]+ Data.AliveCount[1]+ Data.DeadCount[0]+ Data.DeadCount[1];
+            beeCount= Data.AliveCount[0]+ Data.AliveCount[1]+ Data.DeadCount[0]+ Data.DeadCount[1];
         }
+
+        if (beeCount == 0)
+        {
+            beeCount = World.DefaultGameObjectInjectionWorld.EntityManager.CreateEntityQuery(typeof(Target)).CalculateEntityCount();
+        }
+
+        return beeCount;
     }
 }

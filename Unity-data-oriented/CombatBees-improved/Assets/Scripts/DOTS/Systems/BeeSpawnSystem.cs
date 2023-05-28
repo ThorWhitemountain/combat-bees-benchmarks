@@ -25,6 +25,9 @@ namespace DOTS
             team1Dead.AddSharedComponentFilter<Team>(1);
             team2Dead = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(Dead));
             team2Dead.AddSharedComponentFilter<Team>(2);
+
+           
+
         }
 
         public void OnDestroy(ref SystemState state) { }
@@ -33,6 +36,11 @@ namespace DOTS
         public void OnUpdate(ref SystemState state)
         {
             EntityCommandBuffer.ParallelWriter ecb = GetEntityCommandBuffer(ref state);
+
+            Spawner spawner = SystemAPI.GetSingleton<Spawner>();
+            //Remove the LEG from the bees, since they have no hierachy, which saves us 144 bytes per bee.
+            state.EntityManager.RemoveComponent<LinkedEntityGroup>(spawner.BlueBee);
+            state.EntityManager.RemoveComponent<LinkedEntityGroup>(spawner.YellowBee);
 
             int team1AliveCount = team1Alive.CalculateEntityCount();
             int team1DeadCount = team1Dead.CalculateEntityCount();
