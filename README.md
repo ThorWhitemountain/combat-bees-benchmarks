@@ -47,3 +47,9 @@ Attack Job Chunk - DOTS: 4820 + ~1%
 
 
 The biggest offender is adding / removing the "Alive" and "Dead" components, so if we can make the Alive component into an IEnableableComponent and use that to set entities as alive and dead, by toggling it on and off, we can prevent the structural changes from adding/removing these two components. This does however require a pretty big change in the codebase...
+
+
+I'll try making a build of the DOTS version first, and check how big the performance delta between in editor and out of editor is.
+NVM, can't make a build for some reason, it just crashes all the time, no errors. wack.. 64 bit build crashes, 32 bit build has like 40 fps...
+EDITOR: 4820
+BUILD: ???
