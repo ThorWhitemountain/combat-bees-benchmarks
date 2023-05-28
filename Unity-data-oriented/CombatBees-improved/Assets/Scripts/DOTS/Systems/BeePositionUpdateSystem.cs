@@ -21,20 +21,17 @@ namespace DOTS
             state.Dependency = new BeePositionUpdateJob
             {
                 deltaTime = state.WorldUnmanaged.Time.DeltaTime
-
             }.ScheduleParallel(state.Dependency);           
         } 
+
+
+
 
         [BurstCompile]
         public partial struct BeePositionUpdateJob : IJobEntity
         {
             public float deltaTime;
 
-
-            // IJobEntity generates a component data query based on the parameters of its `Execute` method.
-            // This example queries for all Spawner components and uses `ref` to specify that the operation
-            // requires read and write access. Unity processes `Execute` for each entity that matches the
-            // component data query.
             private void Execute(ref LocalTransform transform, in Velocity velocity)
             {
                 transform.Position += velocity.Value * deltaTime;

@@ -5,6 +5,7 @@ using UnityEngine;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Jobs;
+using Unity.Burst.CompilerServices;
 
 namespace DOTS
 {
@@ -18,8 +19,6 @@ namespace DOTS
         private EntityQuery team2Alive;
 
         private ComponentLookup<Dead> deadLookup;
-       
-
 
         public void OnCreate(ref SystemState state)
         {
@@ -56,14 +55,19 @@ namespace DOTS
         public partial struct TargetJob : IJobEntity
         {
             public float deltaTime;
-            [ReadOnly] public NativeArray<Entity> team1Enemies;
-            [ReadOnly] public NativeArray<Entity> team2Enemies;
+            [ReadOnly]
+            public NativeArray<Entity> team1Enemies;
+            [ReadOnly]
+            public NativeArray<Entity> team2Enemies;
             [ReadOnly]
             public ComponentLookup<Dead> DeadLookup;
+
             private void Execute(ref RandomComponent random, ref Target target, in Team team, in Alive _)
             {
                 // no target, or current target dead.
-                if (target.enemyTarget == Entity.Null || DeadLookup.HasComponent(target.enemyTarget))
+                //using a seperate bool can reduce the branching
+                bool eval = Hint.Unlikely(target.enemyTarget == Entity.Null || DeadLookup.HasComponent(target.enemyTarget));
+                if (eval)
                 {
                     var enemies = team == 1 ? team1Enemies : team2Enemies;
                     int newTarget = random.generator.NextInt(0, enemies.Length);

@@ -25,14 +25,13 @@ namespace DOTS
         private ComponentTypeHandle<LocalTransform> transformHandle;
         private ComponentTypeHandle<RandomComponent> randomHandle;
         private ComponentTypeHandle<Velocity> velocityHandle;
-        private ComponentLookup<LocalToWorld> localToWorldLookup;
 
 
         public void OnCreate(ref SystemState state)
         {
-            team1Bees = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(LocalToWorld), typeof(Velocity), typeof(RandomComponent), typeof(Alive));
+            team1Bees = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(LocalTransform), typeof(Velocity), typeof(RandomComponent), typeof(Alive));
             team1Bees.AddSharedComponentFilter<Team>(1);
-            team2Bees = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(LocalToWorld), typeof(Velocity), typeof(RandomComponent), typeof(Alive));
+            team2Bees = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(LocalTransform), typeof(Velocity), typeof(RandomComponent), typeof(Alive));
             team2Bees.AddSharedComponentFilter<Team>(2);
 
             //Alive is needed to make sure we skip moving dead bees
@@ -47,7 +46,6 @@ namespace DOTS
             randomHandle = state.GetComponentTypeHandle<RandomComponent>(false);
             velocityHandle = state.GetComponentTypeHandle<Velocity>(false);
 
-            localToWorldLookup = state.GetComponentLookup<LocalToWorld>(true);
         }
 
 
@@ -59,8 +57,8 @@ namespace DOTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            //var team1Transforms = team1Bees.ToComponentDataListAsync<LocalToWorld>(Allocator.TempJob, state.Dependency, out var dep1);
-            //var team2Transforms = team2Bees.ToComponentDataListAsync<LocalToWorld>(Allocator.TempJob, state.Dependency, out var dep2);
+            var team1Transforms = team1Bees.ToComponentDataListAsync<LocalTransform>(Allocator.TempJob, state.Dependency, out var dep1);
+            var team2Transforms = team2Bees.ToComponentDataListAsync<LocalTransform>(Allocator.TempJob, state.Dependency, out var dep2);
 
             //state.Dependency = new MovementJob
             //{
@@ -75,11 +73,6 @@ namespace DOTS
             transformHandle.Update(ref state);
             randomHandle.Update(ref state);
             velocityHandle.Update(ref state);
-            localToWorldLookup.Update(ref state);
-
-
-            NativeArray<Entity> team1Entities = team1Bees.ToEntityArray(Allocator.TempJob);
-            NativeArray<Entity> team2Entities = team2Bees.ToEntityArray(Allocator.TempJob);
 
             //The team component is shared, so only entities of the same team, exist in the same chunk. So all chunks are team sorted.
             //Team1 job
@@ -87,33 +80,26 @@ namespace DOTS
             {
                 deltaTime = state.WorldUnmanaged.Time.DeltaTime,
                 //Only get this teams positions
-                //allyPositions = team1Transforms.AsDeferredJobArray(),
-                allyEntities = team1Entities,
-                //teamHandle = teamHandle,
+                allyPositions = team1Transforms.AsDeferredJobArray(),
                 transformHandle = transformHandle,
                 randomHandle = randomHandle,
                 velocityHandle = velocityHandle,
-                localToWorldLookup = localToWorldLookup,
-            }.ScheduleParallel(beeTeam1Query, state.Dependency);
+            }.ScheduleParallel(beeTeam1Query,JobHandle.CombineDependencies(dep1, dep2));
+
 
             //Team2 job
             state.Dependency = new MovementJobChunk
             {
                 deltaTime = state.WorldUnmanaged.Time.DeltaTime,
                 //Only get this teams positions
-                //allyPositions = team2Transforms.AsDeferredJobArray(),
-                allyEntities = team2Entities,
-                //teamHandle = teamHandle,
+                allyPositions = team2Transforms.AsDeferredJobArray(),
                 transformHandle = transformHandle,
                 randomHandle = randomHandle,
                 velocityHandle = velocityHandle,
-                localToWorldLookup = localToWorldLookup,
             }.ScheduleParallel(beeTeam2Query, state.Dependency);
 
-            //team1Transforms.Dispose(state.Dependency);
-            //team2Transforms.Dispose(state.Dependency);
-            team1Entities.Dispose(state.Dependency);
-            team2Entities.Dispose(state.Dependency);
+            team1Transforms.Dispose(state.Dependency);
+            team2Transforms.Dispose(state.Dependency);
         }
 
 
@@ -130,10 +116,7 @@ namespace DOTS
             public ComponentTypeHandle<RandomComponent> randomHandle;
 
             [ReadOnly]
-            public ComponentLookup<LocalToWorld> localToWorldLookup;
-            
-            [ReadOnly]
-            public NativeArray<Entity> allyEntities;
+            public NativeArray<LocalTransform> allyPositions;
 
             public void Execute(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask, in v128 chunkEnabledMask)
             {
@@ -142,8 +125,7 @@ namespace DOTS
                 NativeArray<RandomComponent> randoms = chunk.GetNativeArray(ref randomHandle);
 
                 //Same team for all bees in the while loop
-                //int aliveBeesCount = allyPositions.Length;
-                int aliveBeesCount = allyEntities.Length;
+                int aliveBeesCount = allyPositions.Length;
 
                 var enumerator = new ChunkEntityEnumerator(useEnabledMask, chunkEnabledMask, chunk.Count);
                 while (enumerator.NextEntityIndex(out int i))
@@ -163,21 +145,18 @@ namespace DOTS
 
                     //Move towards random ally
                     float3 beePosition = transform.Position;
-                    int allyIndex = random.generator.NextInt(aliveBeesCount);
-
-                    //var allyPosition = allyPositions[allyIndex].Position;
-
                     //Get a random entitiy, and then get its LocalToWorld component
-                    var allyPosition = localToWorldLookup[allyEntities[allyIndex]].Position;
+                    int allyIndex = random.generator.NextInt(aliveBeesCount);
+                    var allyPosition = allyPositions[allyIndex].Position;
                     float3 delta = allyPosition - beePosition;
+
                     float dist = math.sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
                     dist = math.max(0.01f, dist);
                     velocity.Value += delta * (Data.teamAttraction * deltaTime / dist);
 
                     //Move away from random ally
                     allyIndex = random.generator.NextInt(aliveBeesCount);
-                    //allyPosition = allyPositions[allyIndex].Position;
-                    allyPosition = localToWorldLookup[allyEntities[allyIndex]].Position;
+                    allyPosition = allyPositions[allyIndex].Position;
 
                     delta = allyPosition - beePosition;
                     dist = math.sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);

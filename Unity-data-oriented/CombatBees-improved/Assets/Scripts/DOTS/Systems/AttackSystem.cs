@@ -5,6 +5,9 @@ using UnityEngine;
 using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Burst.Intrinsics;
+using UnityEngine.Profiling;
+using Unity.Jobs;
+using Unity.Burst.CompilerServices;
 
 namespace DOTS
 {
@@ -13,7 +16,7 @@ namespace DOTS
     [UpdateBefore(typeof(BeePositionUpdateSystem))]
     public partial struct AttackSystem : ISystem
     {
-        private ComponentLookup<LocalToWorld> localToWorldLookup;
+        private ComponentLookup<LocalTransform> localTransformLookup;
         private EntityQuery beeQuery;
         private ComponentTypeHandle<LocalTransform> transformHandle;
         private ComponentTypeHandle<Target> targetHandle;
@@ -24,8 +27,10 @@ namespace DOTS
             beeQuery = state.EntityManager.CreateEntityQuery(typeof(LocalTransform), typeof(Target), typeof(Velocity), typeof(Alive));
             velocityHandle = state.GetComponentTypeHandle<Velocity>(false);
             targetHandle = state.GetComponentTypeHandle<Target>(true);
-            localToWorldLookup = state.GetComponentLookup<LocalToWorld>(true);
+            //Type handle for linear access for iterating
             transformHandle = state.GetComponentTypeHandle<LocalTransform>(true);
+            //Lookup for random access
+            localTransformLookup = state.GetComponentLookup<LocalTransform>(true);
         }
 
         public void OnDestroy(ref SystemState state) { }
@@ -36,16 +41,15 @@ namespace DOTS
             EntityCommandBuffer.ParallelWriter ecb = GetEntityCommandBuffer(ref state);
             //Update the lookup instead of getting a new all the time.
             velocityHandle.Update(ref state);
-            localToWorldLookup.Update(ref state);
+            localTransformLookup.Update(ref state);
             transformHandle.Update(ref state);
             targetHandle.Update(ref state);
             //state.Dependency = new AttackJobChunk
             //{
             //    Ecb = ecb,
             //    deltaTime = state.WorldUnmanaged.Time.DeltaTime,
-            //    TransformLookup = localToWorldLookup
+            //    TransformLookup = localTransformLookup
             //}.ScheduleParallel(state.Dependency);  
-
 
 
             state.Dependency = new AttackJobChunk
@@ -53,7 +57,7 @@ namespace DOTS
                 Ecb = ecb,
                 deltaTime = state.WorldUnmanaged.Time.DeltaTime,
                 velocityHandle = velocityHandle,
-                TransformLookup = localToWorldLookup,
+                TransformLookup = localTransformLookup,
                 targetHandle = targetHandle,
                 transformHandle = transformHandle
             }.ScheduleParallel(beeQuery, state.Dependency);
@@ -78,7 +82,7 @@ namespace DOTS
             public ComponentTypeHandle<Velocity> velocityHandle;
 
             [ReadOnly]
-            public ComponentLookup<LocalToWorld> TransformLookup;
+            public ComponentLookup<LocalTransform> TransformLookup;
             [ReadOnly]
             public ComponentTypeHandle<LocalTransform> transformHandle;
             [ReadOnly]
@@ -95,10 +99,13 @@ namespace DOTS
                     Velocity velocity = velocities[i];
                     Target target = targets[i];
 
+                    //RANDOM LOOKUP VERY DEMANDING
                     float3 delta = TransformLookup[target.enemyTarget].Position - transforms[i].Position;
-                    float sqrDist = delta.x * delta.x + delta.y * delta.y + delta.z * delta.z;
 
-                    if (sqrDist > Data.attackDistance * Data.attackDistance)
+                    float sqrDist = delta.x * delta.x + delta.y * delta.y + delta.z * delta.z;
+                    //This seems to be true for almost all cases?
+                    //Bees will most of the time not kill each frame, tell the compiler to optimise for entering the if statement.
+                    if (Hint.Likely(sqrDist > Data.attackDistance * Data.attackDistance))
                     {
                         velocity.Value += delta.xyz * (Data.chaseForce * deltaTime / math.sqrt(sqrDist));
                         velocities[i] = velocity;

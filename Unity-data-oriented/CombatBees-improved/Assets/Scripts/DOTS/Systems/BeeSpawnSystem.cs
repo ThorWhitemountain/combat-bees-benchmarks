@@ -13,10 +13,11 @@ namespace DOTS
         private EntityQuery team2Alive;
         private EntityQuery team1Dead;
         private EntityQuery team2Dead;
+        private bool firstRun;
 
         public void OnCreate(ref SystemState state)
         {
-
+            firstRun = true;
             team1Alive = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(Alive));
             team1Alive.AddSharedComponentFilter<Team>(1);
             team2Alive = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(Alive));
@@ -26,21 +27,34 @@ namespace DOTS
             team2Dead = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(Dead));
             team2Dead.AddSharedComponentFilter<Team>(2);
 
-           
+
 
         }
 
         public void OnDestroy(ref SystemState state) { }
+
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             EntityCommandBuffer.ParallelWriter ecb = GetEntityCommandBuffer(ref state);
 
-            Spawner spawner = SystemAPI.GetSingleton<Spawner>();
-            //Remove the LEG from the bees, since they have no hierachy, which saves us 144 bytes per bee.
-            state.EntityManager.RemoveComponent<LinkedEntityGroup>(spawner.BlueBee);
-            state.EntityManager.RemoveComponent<LinkedEntityGroup>(spawner.YellowBee);
+            if (firstRun)
+            {
+
+                if (!SystemAPI.TryGetSingleton(out Spawner spawner))
+                {
+                    //No spawner exists, so the subscene hasn't loaded in
+                    return;
+                }
+                else
+                {
+                    firstRun = false;
+                    //Remove the LEG from the bees, since they have no hierachy, which saves us 144 bytes per bee.
+                    state.EntityManager.RemoveComponent<LinkedEntityGroup>(spawner.BlueBee);
+                    state.EntityManager.RemoveComponent<LinkedEntityGroup>(spawner.YellowBee);
+                }
+            }
 
             int team1AliveCount = team1Alive.CalculateEntityCount();
             int team1DeadCount = team1Dead.CalculateEntityCount();
