@@ -5,6 +5,7 @@ My 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 
 (IN EDITOR)
 Old DOTS: 4330
+
 REMOVE LEG COMP - DOTS: 4650 + ~7%
 
 ASM: Am dumb and don't know how to run it :)
@@ -47,3 +48,9 @@ Attack Job Chunk - DOTS: 4820 + ~1%
 
 
 The biggest offender is adding / removing the "Alive" and "Dead" components, so if we can make the Alive component into an IEnableableComponent and use that to set entities as alive and dead, by toggling it on and off, we can prevent the structural changes from adding/removing these two components. This does however require a pretty big change in the codebase...
+
+
+I'll try making a build of the DOTS version first, and check how big the performance delta between in editor and out of editor is.
+NVM, can't make a build for some reason, it just crashes all the time, no errors. wack.. 64 bit build crashes, 32 bit build has like 40 fps...
+EDITOR: 4820
+BUILD: ???
