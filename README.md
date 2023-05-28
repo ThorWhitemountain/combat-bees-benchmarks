@@ -54,3 +54,43 @@ I'll try making a build of the DOTS version first, and check how big the perform
 NVM, can't make a build for some reason, it just crashes all the time, no errors. wack.. 64 bit build crashes, 32 bit build has like 40 fps...
 EDITOR: 4820
 BUILD: ???
+
+
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/f4d347fe-c694-45a5-925d-4350d451db1f)
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/03f35e7e-e7c6-45b0-84c6-e366bcbefc05)
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/5d0bee59-56c0-44b1-a065-86664c6df1d9)
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/cbbbc1c2-a168-4ed6-93b5-515aa600a8a9)
+
+BURST OFF
+From this we can see that step 1 of the attacksystem is taking a very large amount of time, around 2/3rds of the total time
+with step 2 taking around 1/3rd and step 3 barely registering.
+
+BURST ON
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/8f864926-5c37-48fd-9cc3-e8d63e79c7ca)
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/d0cfab81-bdb7-4f31-90b9-16e9df054cfb)
+
+By commenting out most of the code, we can see that the first lines of code still take a very long amount of time, considering that the total for the entire code is around 10-11ms, for the 
+Burst Compiled step 1 to be taking 8.5 - 9.5ms, it's pretty rough.
+
+I thought that the demanding part was the distance calculations, but it seems to be the random lookup being the most demanding part, as we're doing 100 thousand random localtransform lookups, which is bad for performance. 
+By replacing the enemy position with (0,0,0) we can see how big this lookup cost is, by not having to pay it.
+
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/54056a61-7555-4d48-88c0-07badedd7d8f)
+Aaaand we get down to  0.5ms across all threads, which is like a ~95% reduction
+
+Therefore, we really want to avoid making this randomlookup for every single bee, for every single frame.
+And if we can't avoid paying this lookup cost, we want to make it cheaper if possible. 
+
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/2622aaec-a4f4-41a0-99b9-18f4e001a1ab)
+Swapping from the lookup being a LocalToWorld (64 bytes) to being a LocalTransform (32 bytes) makes the random lookup a bit cheaper, and brings the time for the system down to 8-9 ms, 
+so it's not much of a save, and it might just be down to run variance or something. 
+So we want to minimize the random lookup if possible, but the bees need to have an up to date enemytarget position every frame, so we can't make it update the target less often,
+as we then change the behaviour.
+
+Upon further investigation, the random access lookup I implemented in the movement job system wasn't worth it, as it also was very demanding as we were doing 2 random lookups for each bee. 
+So now I've changed it back to use the large array of positions, but this time It's localTransforms instead of LocalToWorlds
+
+Performance is still around the ~4800 frames
+
+
+
