@@ -21,7 +21,7 @@ namespace DOTS
         private EntityQuery beeTeam1Query;
         private EntityQuery beeTeam2Query;
 
-        private SharedComponentTypeHandle<Team> teamHandle;
+        //private SharedComponentTypeHandle<Team> teamHandle;
         private ComponentTypeHandle<LocalTransform> transformHandle;
         private ComponentTypeHandle<RandomComponent> randomHandle;
         private ComponentTypeHandle<Velocity> velocityHandle;
@@ -42,7 +42,7 @@ namespace DOTS
             beeTeam2Query = state.EntityManager.CreateEntityQuery(typeof(LocalTransform), typeof(RandomComponent), typeof(Velocity), typeof(Alive), typeof(Team));
             beeTeam2Query.AddSharedComponentFilter<Team>(2);
 
-            teamHandle = state.GetSharedComponentTypeHandle<Team>();
+            //teamHandle = state.GetSharedComponentTypeHandle<Team>();
             transformHandle = state.GetComponentTypeHandle<LocalTransform>(false);
             randomHandle = state.GetComponentTypeHandle<RandomComponent>(false);
             velocityHandle = state.GetComponentTypeHandle<Velocity>(false);
@@ -71,7 +71,7 @@ namespace DOTS
             //}.ScheduleParallel(JobHandle.CombineDependencies(dep1, dep2));
 
             //Update the handles so they are up to date
-            teamHandle.Update(ref state);
+            //teamHandle.Update(ref state);
             transformHandle.Update(ref state);
             randomHandle.Update(ref state);
             velocityHandle.Update(ref state);
@@ -89,7 +89,7 @@ namespace DOTS
                 //Only get this teams positions
                 //allyPositions = team1Transforms.AsDeferredJobArray(),
                 allyEntities = team1Entities,
-                teamHandle = teamHandle,
+                //teamHandle = teamHandle,
                 transformHandle = transformHandle,
                 randomHandle = randomHandle,
                 velocityHandle = velocityHandle,
@@ -103,7 +103,7 @@ namespace DOTS
                 //Only get this teams positions
                 //allyPositions = team2Transforms.AsDeferredJobArray(),
                 allyEntities = team2Entities,
-                teamHandle = teamHandle,
+                //teamHandle = teamHandle,
                 transformHandle = transformHandle,
                 randomHandle = randomHandle,
                 velocityHandle = velocityHandle,
@@ -131,13 +131,7 @@ namespace DOTS
 
             [ReadOnly]
             public ComponentLookup<LocalToWorld> localToWorldLookup;
-
-            [ReadOnly]
-            public SharedComponentTypeHandle<Team> teamHandle;
-
-            //[ReadOnly]
-            //public NativeArray<LocalToWorld> allyPositions;
-
+            
             [ReadOnly]
             public NativeArray<Entity> allyEntities;
 
