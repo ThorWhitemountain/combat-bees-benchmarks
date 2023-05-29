@@ -19,6 +19,8 @@ NEW(EST) DOTS MONO : 7505 (270 fps) (+ 73%)
 
 
 
+
+**Changes**
 REMOVE LEG COMP - DOTS: 4650 + ~7%
 
 ASM: Am dumb and don't know how to run it :)
