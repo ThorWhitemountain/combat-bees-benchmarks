@@ -7,6 +7,7 @@ using Unity.Collections;
 using Unity.Jobs;
 using Unity.Burst.Intrinsics;
 using static DOTS.BeePositionUpdateSystem;
+using UnityEngine.Profiling;
 
 namespace DOTS
 {
@@ -85,7 +86,7 @@ namespace DOTS
                 transformHandle = transformHandle,
                 randomHandle = randomHandle,
                 velocityHandle = velocityHandle,
-            }.ScheduleParallel(beeTeam1Query,JobHandle.CombineDependencies(dep1, dep2));
+            }.ScheduleParallel(beeTeam1Query, JobHandle.CombineDependencies(dep1, dep2));
 
 
             //Team2 job
@@ -107,7 +108,7 @@ namespace DOTS
 
 
 
-        [BurstCompile(OptimizeFor = OptimizeFor.Performance)]
+        [BurstCompile(OptimizeFor = OptimizeFor.Performance,FloatMode = FloatMode.Fast, FloatPrecision = FloatPrecision.Standard)]
         public partial struct MovementJobChunk : IJobChunk
         {
             public float deltaTime;
@@ -125,6 +126,11 @@ namespace DOTS
                 NativeArray<Velocity> velocities = chunk.GetNativeArray(ref velocityHandle);
                 NativeArray<RandomComponent> randoms = chunk.GetNativeArray(ref randomHandle);
 
+                float teamRepulsionFactor = Data.teamRepulsion * deltaTime;
+                float rotationLerpFactor = deltaTime * 4;
+                float teamAttraction = Data.teamAttraction * deltaTime;
+                float dampingFactor = Data.damping * deltaTime;
+                float jitterFactor = Data.flightJitter * deltaTime;
 
                 //Same team for all bees in the while loop
                 int aliveBeesCount = allyPositions.Length;
@@ -141,32 +147,36 @@ namespace DOTS
                     randomVector.y = random.generator.NextFloat() * 2.0f - 1.0f;
                     randomVector.z = random.generator.NextFloat() * 2.0f - 1.0f;
 
-                    velocity.Value += randomVector * (Data.flightJitter * deltaTime);
-                    velocity.Value *= (1f - Data.damping * deltaTime);
+                    velocity.Value += randomVector * jitterFactor;
+                    velocity.Value *= 1f - dampingFactor;
 
 
                     //Move towards random ally
                     float3 beePosition = transform.Position;
                     //Get a random entitiy, and then get its LocalToWorld component
                     int allyIndex = random.generator.NextInt(aliveBeesCount);
-                    var allyPosition = allyPositions[allyIndex].Position;
+
+                    //RANDOM LOOKUP VERY DEMANDING
+                    float3 allyPosition = allyPositions[allyIndex].Position;
                     float3 delta = allyPosition - beePosition;
 
                     float dist = math.sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
                     dist = math.max(0.01f, dist);
-                    velocity.Value += delta * (Data.teamAttraction * deltaTime / dist);
+                    velocity.Value += delta * (teamAttraction / dist);
 
                     //Move away from random ally
                     allyIndex = random.generator.NextInt(aliveBeesCount);
+                    //RANDOM LOOKUP VERY DEMANDING
                     allyPosition = allyPositions[allyIndex].Position;
 
                     delta = allyPosition - beePosition;
                     dist = math.sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
                     dist = math.max(0.011f, dist);
-                    velocity.Value -= delta * (Data.teamRepulsion * deltaTime / dist);
 
-                    var targetRotation = quaternion.LookRotation(math.normalize(velocity.Value), new float3(0, 1, 0));
-                    transform.Rotation = math.nlerp(transform.Rotation, targetRotation, deltaTime * 4);
+                    velocity.Value -= delta * (teamRepulsionFactor / dist);
+                    quaternion targetRotation = quaternion.LookRotation(math.normalize(velocity.Value), new float3(0, 1, 0));
+                    transform.Rotation = math.nlerp(transform.Rotation, targetRotation, rotationLerpFactor);
+
                     //save changes to components
                     transforms[i] = transform;
                     randoms[i] = random;
@@ -213,7 +223,7 @@ namespace DOTS
                 velocity.Value -= delta * (Data.teamRepulsion * deltaTime / dist);
 
                 var rotation = transform.Rotation;
-                var targetRotation = quaternion.LookRotation(math.normalize(velocity.Value), Vector3.up);
+                var targetRotation = quaternion.LookRotation(math.normalize(velocity.Value), new float3(0, 1, 0));
                 rotation = math.nlerp(rotation, targetRotation, deltaTime * 4);
                 transform.Rotation = rotation;
             }
