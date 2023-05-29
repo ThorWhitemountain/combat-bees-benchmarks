@@ -4,7 +4,7 @@ Benchmarks of different versions of a simple bee simulation to compare the perfo
 My 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 
 (IN EDITOR)
-Old DOTS: 4330
+OLD DOTS: 4330 (Improved version from @yndc) 36-44% faster than original version.
 
 NEW(EST) DOTS : 5330 (+ 23%)
 
