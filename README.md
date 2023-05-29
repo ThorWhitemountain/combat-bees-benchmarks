@@ -4,8 +4,16 @@ Benchmarks of different versions of a simple bee simulation to compare the perfo
 My 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 
 (IN EDITOR)
-Old DOTS: 4330
-NEW(EST) DOTS : 5150 (+ 19%)
+OLD DOTS: 4330 (Improved version from @yndc) 36-44% faster than original version.
+
+Leak detection, saftety checks, and jobs debugger turned off.
+NEW(EST) DOTS : 5630 (+ 30%)
+
+Leak detection, saftety checks, and jobs debugger turned on.
+NEW(EST) DOTS : 5330 (+ 23%)
+
+
+
 
 REMOVE LEG COMP - DOTS: 4650 + ~7%
 
@@ -109,6 +117,8 @@ Additionally the adding of a new component, every time a bee dies is bad, so we 
 Additionally, we add 6 NEW components and 1 SHARED component, for every bee we instantiate, which is also bad. So I made these components get added to the bee entity prefab on startup, so we just need to set values in these components instead.
 Furthermore, all the bees are getting instantiated ONE at a time, which is not ideal, as when you're instantiating multiple bees, you should instantiate directly into a nativearray, which I've made it do now.
 ![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/00c33c8c-296a-40b7-a979-f5a783a8cf60)
+
+Final change is making the movement system cache some values that are used across all bees. decent performance uplift
 
 
 Now the only structural changes are caused from instantiating new bee arrays, and from destroying bees INDIVIDUALLY (which we could also make happen batch-based, by queuing them up via queue we fill from a job, and add to nativearray after the jobs execution, but I dont think enough bees are dying each frame to make this worth the hassle)
