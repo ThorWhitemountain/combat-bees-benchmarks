@@ -101,3 +101,20 @@ Position component - DOTS: 5150 + ~6.5%
 
 
 But to avoid the random access lookup would require a design change, as having 100k bees doing 100k random lookups is not very good for performance...
+
+
+
+Let's go fix those structural changes. The biggest problem is adding/removing dead and alive components all the time, so I've removed the Dead component, and made the Alive component be an IEnableable, so we just turn it on/off, causing no structual changes.
+Additionally the adding of a new component, every time a bee dies is bad, so we make sure that bees get instantiated with a deadtimer, (since their deadtimer only gets processed, if they're NOT alive, this is fine).
+Additionally, we add 6 NEW components and 1 SHARED component, for every bee we instantiate, which is also bad. So I made these components get added to the bee entity prefab on startup, so we just need to set values in these components instead.
+Furthermore, all the bees are getting instantiated ONE at a time, which is not ideal, as when you're instantiating multiple bees, you should instantiate directly into a nativearray, which I've made it do now.
+![image](https://github.com/ThorWhitemountain/combat-bees-benchmarks/assets/72937268/00c33c8c-296a-40b7-a979-f5a783a8cf60)
+
+
+Now the only structural changes are caused from instantiating new bee arrays, and from destroying bees INDIVIDUALLY (which we could also make happen batch-based, by queuing them up via queue we fill from a job, and add to nativearray after the jobs execution, but I dont think enough bees are dying each frame to make this worth the hassle)
+
+30 second test
+Remove structual components - DOTS: 5330 + ~3%
+
+The target system has been converted to one job for each team, which means we send in half the data (native array of entity) and we can remove a logical condition which should help the performance.
+I have moved the random lookup for the alive component back into the attacksystem instead of the targetsystem, since it feels better to just have all the slow random lookups in the same system, as the target job is now around 1ms
