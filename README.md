@@ -7,9 +7,11 @@ My 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 OLD DOTS: 4330 (Improved version from @yndc) 36-44% faster than original version.
 
 Leak detection, saftety checks, and jobs debugger turned off.
+
 NEW(EST) DOTS : 5630 (+ 30%)
 
 Leak detection, saftety checks, and jobs debugger turned on.
+
 NEW(EST) DOTS : 5330 (+ 23%)
 
 
@@ -23,6 +25,7 @@ NEW(EST) DOTS IL2CPP : 7505 (270 fps) (+ 73%), basically same, but it swings a b
 
 
 **Changes**
+
 REMOVE LEG COMP - DOTS: 4650 + ~7%
 
 ASM: Am dumb and don't know how to run it :)
