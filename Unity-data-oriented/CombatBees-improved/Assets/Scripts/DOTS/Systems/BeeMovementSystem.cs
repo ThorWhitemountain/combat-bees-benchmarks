@@ -6,6 +6,7 @@ using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Burst.Intrinsics;
+using static DOTS.BeePositionUpdateSystem;
 
 namespace DOTS
 {
@@ -23,15 +24,15 @@ namespace DOTS
 
         //private SharedComponentTypeHandle<Team> teamHandle;
         private ComponentTypeHandle<LocalTransform> transformHandle;
-        private ComponentTypeHandle<RandomComponent> randomHandle;
         private ComponentTypeHandle<Velocity> velocityHandle;
+        private ComponentTypeHandle<RandomComponent> randomHandle;
 
 
         public void OnCreate(ref SystemState state)
         {
-            team1Bees = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(LocalTransform), typeof(Velocity), typeof(RandomComponent), typeof(Alive));
+            team1Bees = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(EntityPosition), typeof(Velocity), typeof(RandomComponent), typeof(Alive));
             team1Bees.AddSharedComponentFilter<Team>(1);
-            team2Bees = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(LocalTransform), typeof(Velocity), typeof(RandomComponent), typeof(Alive));
+            team2Bees = state.EntityManager.CreateEntityQuery(typeof(Team), typeof(EntityPosition), typeof(Velocity), typeof(RandomComponent), typeof(Alive));
             team2Bees.AddSharedComponentFilter<Team>(2);
 
             //Alive is needed to make sure we skip moving dead bees
@@ -43,8 +44,8 @@ namespace DOTS
 
             //teamHandle = state.GetSharedComponentTypeHandle<Team>();
             transformHandle = state.GetComponentTypeHandle<LocalTransform>(false);
-            randomHandle = state.GetComponentTypeHandle<RandomComponent>(false);
             velocityHandle = state.GetComponentTypeHandle<Velocity>(false);
+            randomHandle = state.GetComponentTypeHandle<RandomComponent>(false);
 
         }
 
@@ -57,8 +58,8 @@ namespace DOTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var team1Transforms = team1Bees.ToComponentDataListAsync<LocalTransform>(Allocator.TempJob, state.Dependency, out var dep1);
-            var team2Transforms = team2Bees.ToComponentDataListAsync<LocalTransform>(Allocator.TempJob, state.Dependency, out var dep2);
+            var team1Transforms = team1Bees.ToComponentDataListAsync<EntityPosition>(Allocator.TempJob, state.Dependency, out var dep1);
+            var team2Transforms = team2Bees.ToComponentDataListAsync<EntityPosition>(Allocator.TempJob, state.Dependency, out var dep2);
 
             //state.Dependency = new MovementJob
             //{
@@ -116,13 +117,14 @@ namespace DOTS
             public ComponentTypeHandle<RandomComponent> randomHandle;
 
             [ReadOnly]
-            public NativeArray<LocalTransform> allyPositions;
+            public NativeArray<EntityPosition> allyPositions;
 
             public void Execute(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask, in v128 chunkEnabledMask)
             {
                 NativeArray<LocalTransform> transforms = chunk.GetNativeArray(ref transformHandle);
                 NativeArray<Velocity> velocities = chunk.GetNativeArray(ref velocityHandle);
                 NativeArray<RandomComponent> randoms = chunk.GetNativeArray(ref randomHandle);
+
 
                 //Same team for all bees in the while loop
                 int aliveBeesCount = allyPositions.Length;

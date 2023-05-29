@@ -8,6 +8,7 @@ using Unity.Burst.Intrinsics;
 using UnityEngine.Profiling;
 using Unity.Jobs;
 using Unity.Burst.CompilerServices;
+using static DOTS.BeePositionUpdateSystem;
 
 namespace DOTS
 {
@@ -16,7 +17,7 @@ namespace DOTS
     [UpdateBefore(typeof(BeePositionUpdateSystem))]
     public partial struct AttackSystem : ISystem
     {
-        private ComponentLookup<LocalTransform> localTransformLookup;
+        private ComponentLookup<EntityPosition> localTransformLookup;
         private EntityQuery beeQuery;
         private ComponentTypeHandle<LocalTransform> transformHandle;
         private ComponentTypeHandle<Target> targetHandle;
@@ -30,7 +31,7 @@ namespace DOTS
             //Type handle for linear access for iterating
             transformHandle = state.GetComponentTypeHandle<LocalTransform>(true);
             //Lookup for random access
-            localTransformLookup = state.GetComponentLookup<LocalTransform>(true);
+            localTransformLookup = state.GetComponentLookup<EntityPosition>(true);
         }
 
         public void OnDestroy(ref SystemState state) { }
@@ -82,7 +83,7 @@ namespace DOTS
             public ComponentTypeHandle<Velocity> velocityHandle;
 
             [ReadOnly]
-            public ComponentLookup<LocalTransform> TransformLookup;
+            public ComponentLookup<EntityPosition> TransformLookup;
             [ReadOnly]
             public ComponentTypeHandle<LocalTransform> transformHandle;
             [ReadOnly]

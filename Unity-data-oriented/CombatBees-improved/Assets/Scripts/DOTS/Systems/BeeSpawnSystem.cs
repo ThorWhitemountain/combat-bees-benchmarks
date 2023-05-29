@@ -2,6 +2,7 @@ using Unity.Entities;
 using Unity.Transforms;
 using Unity.Burst;
 using Unity.Core;
+using static DOTS.BeePositionUpdateSystem;
 
 namespace DOTS
 {
@@ -112,6 +113,7 @@ namespace DOTS
                     Ecb.AddComponent(chunkIndex, newEntity, new Velocity());
                     Ecb.AddComponent(chunkIndex, newEntity, new Alive());
                     Ecb.AddComponent(chunkIndex, newEntity, new Target());
+                    Ecb.AddComponent(chunkIndex, newEntity, new EntityPosition());
                     Ecb.AddComponent(chunkIndex, newEntity, rand);
                     Ecb.AddSharedComponent(chunkIndex, newEntity, new Team { Value = 1 });
                 }
@@ -130,6 +132,7 @@ namespace DOTS
                     Ecb.AddComponent(chunkIndex, newEntity, new Velocity());
                     Ecb.AddComponent(chunkIndex, newEntity, new Alive());
                     Ecb.AddComponent(chunkIndex, newEntity, new Target());
+                    Ecb.AddComponent(chunkIndex, newEntity, new EntityPosition());
                     Ecb.AddComponent(chunkIndex, newEntity, rand);
                     Ecb.AddSharedComponent(chunkIndex, newEntity, new Team { Value = 2 });
                 }

@@ -65,9 +65,7 @@ namespace DOTS
             private void Execute(ref RandomComponent random, ref Target target, in Team team, in Alive _)
             {
                 // no target, or current target dead.
-                //using a seperate bool can reduce the branching
-                bool eval = Hint.Unlikely(target.enemyTarget == Entity.Null || DeadLookup.HasComponent(target.enemyTarget));
-                if (eval)
+                if (target.enemyTarget == Entity.Null || DeadLookup.HasComponent(target.enemyTarget))
                 {
                     var enemies = team == 1 ? team1Enemies : team2Enemies;
                     int newTarget = random.generator.NextInt(0, enemies.Length);
