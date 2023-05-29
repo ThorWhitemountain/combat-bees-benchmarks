@@ -92,5 +92,11 @@ So now I've changed it back to use the large array of positions, but this time I
 
 Performance is still around the ~4800 frames
 
+Since we know that reducing how much data has to read from this random access lookup can improve performance, I've created a new component, thats gets updated every frame (while we're already updating the transform components position) which only contains the position. 3 floats, 12 bytes.
+Using this instead of localtransform to get the target positions in the movementsystem and the attacksystem, gives some pretty good performance improvements, and the entities per chunk count is still at 80.
+
+30 second test
+Position component - DOTS: 5150 + ~6.5%
 
 
+But to avoid the random access lookup would require a design change, as having 100k bees doing 100k random lookups is not very good for performance...
