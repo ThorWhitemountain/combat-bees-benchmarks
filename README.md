@@ -13,6 +13,9 @@ Leak detection, saftety checks, and jobs debugger turned on.
 NEW(EST) DOTS : 5330 (+ 23%)
 
 
+**GOT A BUILD WORKING**
+NEW(EST) DOTS MONO : 7505 (270 fps) (+ 73%)
+
 
 
 REMOVE LEG COMP - DOTS: 4650 + ~7%
