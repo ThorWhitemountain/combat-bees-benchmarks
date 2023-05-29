@@ -9,6 +9,7 @@ using UnityEngine.Profiling;
 using Unity.Jobs;
 using Unity.Burst.CompilerServices;
 using static DOTS.BeePositionUpdateSystem;
+using Unity.Entities.UniversalDelegates;
 
 namespace DOTS
 {
@@ -22,16 +23,18 @@ namespace DOTS
         private ComponentTypeHandle<LocalTransform> transformHandle;
         private ComponentTypeHandle<Target> targetHandle;
         private ComponentTypeHandle<Velocity> velocityHandle;
+        private ComponentLookup<Alive> aliveLookup;
 
         public void OnCreate(ref SystemState state)
         {
             beeQuery = state.EntityManager.CreateEntityQuery(typeof(LocalTransform), typeof(Target), typeof(Velocity), typeof(Alive));
             velocityHandle = state.GetComponentTypeHandle<Velocity>(false);
-            targetHandle = state.GetComponentTypeHandle<Target>(true);
+            targetHandle = state.GetComponentTypeHandle<Target>(false);
             //Type handle for linear access for iterating
             transformHandle = state.GetComponentTypeHandle<LocalTransform>(true);
             //Lookup for random access
             localTransformLookup = state.GetComponentLookup<EntityPosition>(true);
+            aliveLookup = state.GetComponentLookup<Alive>(true);
         }
 
         public void OnDestroy(ref SystemState state) { }
@@ -45,11 +48,12 @@ namespace DOTS
             localTransformLookup.Update(ref state);
             transformHandle.Update(ref state);
             targetHandle.Update(ref state);
+            aliveLookup.Update(ref state);
             //state.Dependency = new AttackJobChunk
             //{
             //    Ecb = ecb,
             //    deltaTime = state.WorldUnmanaged.Time.DeltaTime,
-            //    TransformLookup = localTransformLookup
+            //    transformLookup = localTransformLookup
             //}.ScheduleParallel(state.Dependency);  
 
 
@@ -58,9 +62,11 @@ namespace DOTS
                 Ecb = ecb,
                 deltaTime = state.WorldUnmanaged.Time.DeltaTime,
                 velocityHandle = velocityHandle,
-                TransformLookup = localTransformLookup,
+                transformLookup = localTransformLookup,
                 targetHandle = targetHandle,
-                transformHandle = transformHandle
+                transformHandle = transformHandle,
+                aliveLookup = aliveLookup,
+
             }.ScheduleParallel(beeQuery, state.Dependency);
         }
 
@@ -83,11 +89,14 @@ namespace DOTS
             public ComponentTypeHandle<Velocity> velocityHandle;
 
             [ReadOnly]
-            public ComponentLookup<EntityPosition> TransformLookup;
+            public ComponentLookup<EntityPosition> transformLookup;
             [ReadOnly]
             public ComponentTypeHandle<LocalTransform> transformHandle;
-            [ReadOnly]
+            //[ReadOnly]
             public ComponentTypeHandle<Target> targetHandle;
+
+            [ReadOnly]
+            public ComponentLookup<Alive> aliveLookup;
 
             public void Execute(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask, in v128 chunkEnabledMask)
             {
@@ -97,11 +106,22 @@ namespace DOTS
                 var enumerator = new ChunkEntityEnumerator(useEnabledMask, chunkEnabledMask, chunk.Count);
                 while (enumerator.NextEntityIndex(out int i))
                 {
-                    Velocity velocity = velocities[i];
                     Target target = targets[i];
 
+                    //Not alive
                     //RANDOM LOOKUP VERY DEMANDING
-                    float3 delta = TransformLookup[target.enemyTarget].Position - transforms[i].Position;
+                    if (!aliveLookup.IsComponentEnabled(target.enemyTarget))
+                    {
+                        target.enemyTarget = Entity.Null;
+                        targets[i] = target;
+                        continue;
+                    }
+
+                    
+                    Velocity velocity = velocities[i];
+
+                    //RANDOM LOOKUP VERY DEMANDING
+                    float3 delta = transformLookup[target.enemyTarget].Position - transforms[i].Position;
 
                     float sqrDist = delta.x * delta.x + delta.y * delta.y + delta.z * delta.z;
                     //This seems to be true for almost all cases?
@@ -118,10 +138,11 @@ namespace DOTS
                     velocities[i] = velocity;
                     if (sqrDist < Data.hitDistance * Data.hitDistance)
                     {
-                        Ecb.AddComponent<Dead>(i, target.enemyTarget);
+                        //Ecb.AddComponent<Dead>(i, target.enemyTarget);
                         Ecb.AddComponent(i, target.enemyTarget, new DeadTimer { time = 0.0f });
                         //Ecb.RemoveComponent<Alive>(chunkIndex, target.enemyTarget);
-                        Ecb.RemoveComponent<Alive>(i, target.enemyTarget);
+                        //Mark as dead
+                        Ecb.SetComponentEnabled<Alive>(i, target.enemyTarget, false);
                     }
                 }
             }
@@ -153,10 +174,12 @@ namespace DOTS
                     velocity.Value += delta * (Data.attackForce * deltaTime / math.sqrt(sqrDist));
                     if (sqrDist < Data.hitDistance * Data.hitDistance)
                     {
-                        Ecb.AddComponent<Dead>(chunkIndex, target.enemyTarget);
-                        Ecb.AddComponent(chunkIndex, target.enemyTarget, new DeadTimer { time = 0.0f });
+                        //Ecb.AddComponent<Dead>(chunkIndex, target.enemyTarget);
+                        //Ecb.AddComponent(chunkIndex, target.enemyTarget, new DeadTimer { time = 0.0f });
+                        //Avoid structural changes by all bees already having a deadtimer.
+                        Ecb.SetComponent(chunkIndex, target.enemyTarget, new DeadTimer { time = 0.0f });
                         //Ecb.RemoveComponent<Alive>(chunkIndex, target.enemyTarget);
-                        Ecb.RemoveComponent<Alive>(chunkIndex, target.enemyTarget);
+                        Ecb.SetComponentEnabled<Alive>(chunkIndex, target.enemyTarget, false);
                     }
                 }
             }

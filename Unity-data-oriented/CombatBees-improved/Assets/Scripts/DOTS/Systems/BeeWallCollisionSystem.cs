@@ -32,6 +32,7 @@ namespace DOTS
                     velocity.Value.y *= .8f;
                     velocity.Value.z *= .8f;
                 }
+
                 if (math.abs(position.z) > DataBurst.FieldSize.z * .5f)
                 {
                     position.z = (DataBurst.FieldSize.z * .5f) * math.sign(position.z);
@@ -47,6 +48,7 @@ namespace DOTS
                     velocity.Value.z *= .8f;
                     velocity.Value.x *= .8f;
                 }
+
                 transform.Position = position;
             }
         }
