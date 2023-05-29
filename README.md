@@ -5,7 +5,8 @@ My 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 
 (IN EDITOR)
 Old DOTS: 4330
-NEW(EST) DOTS : 5150 (+ 19%)
+
+NEW(EST) DOTS : 5330 (+ 23%)
 
 REMOVE LEG COMP - DOTS: 4650 + ~7%
 
