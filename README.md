@@ -3,6 +3,7 @@ Benchmarks of different versions of a simple bee simulation to compare the perfo
 
 My 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 
+ASM: Am dumb and don't know how to run it :)
 (IN EDITOR)
 OLD DOTS: 4330 (Improved version from @yndc) 36-44% faster than original version.
 
@@ -17,9 +18,9 @@ NEW(EST) DOTS : 5330 (+ 23%)
 
 **GOT A BUILD WORKING**
 
-NEW(EST) DOTS MONO : 7505 (270 fps) (+ 73%)
+NEWEST DOTS MONO : 7505 (270 fps) (+ 73%)
 
-NEW(EST) DOTS IL2CPP : 7505 (270 fps) (+ 73%), basically same, but it swings a bit more. got 7650, 7480, 7530, 7620
+NEWEST DOTS IL2CPP : 7505 (270 fps) (+ 73%), basically same, but it swings a bit more. got 7650, 7480, 7530, 7620
 
 
 
@@ -28,7 +29,6 @@ NEW(EST) DOTS IL2CPP : 7505 (270 fps) (+ 73%), basically same, but it swings a b
 
 REMOVE LEG COMP - DOTS: 4650 + ~7%
 
-ASM: Am dumb and don't know how to run it :)
 
 Removing the LinkedEntityGroup component works since bees have no hierachy, and saves us 144 bytes per entity (bee) which is 14.4 MB saved for 100k bees.
 It brings the Chunk entity count up from 46 to 80 ( 73 % increase), which gives us better memory ulitisation and slightly better performance. 
