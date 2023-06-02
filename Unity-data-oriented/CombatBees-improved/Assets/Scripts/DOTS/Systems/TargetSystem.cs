@@ -69,7 +69,24 @@ namespace DOTS
 
 
 
+        //Chose a random target
+        [BurstCompile]
+        public partial struct TeamTargetJob : IJobEntity
+        {
+            public float deltaTime;
+            [ReadOnly]
+            public NativeArray<Entity> teamEnemies;
 
+            private void Execute(ref RandomComponent random, ref Target target)
+            {
+                // no target, or current target NOT alive.
+                if (target.enemyTarget == Entity.Null)
+                {
+                    int newTarget = random.generator.NextInt(0, teamEnemies.Length);
+                    target.enemyTarget = teamEnemies[newTarget];
+                }
+            }
+        }
 
 
 
@@ -100,23 +117,6 @@ namespace DOTS
 
 
 
-        //Chose a random target
-        [BurstCompile]
-        public partial struct TeamTargetJob : IJobEntity
-        {
-            public float deltaTime;
-            [ReadOnly]
-            public NativeArray<Entity> teamEnemies;
-
-            private void Execute(ref RandomComponent random, ref Target target)
-            {
-                // no target, or current target NOT alive.
-                if (target.enemyTarget == Entity.Null )
-                {
-                    int newTarget = random.generator.NextInt(0, teamEnemies.Length);
-                    target.enemyTarget = teamEnemies[newTarget];
-                }
-            }
-        }
+        
     }
 }

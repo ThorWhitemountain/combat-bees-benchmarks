@@ -3,7 +3,6 @@ using Unity.Transforms;
 using Unity.Burst;
 using Unity.Core;
 using static DOTS.BeePositionUpdateSystem;
-using UnityEngine.XR;
 using Unity.Collections;
 
 namespace DOTS

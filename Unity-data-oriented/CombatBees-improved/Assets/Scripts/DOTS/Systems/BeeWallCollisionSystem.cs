@@ -16,40 +16,43 @@ namespace DOTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            state.Dependency = new WallCollisionJob().ScheduleParallel(state.Dependency);           
+            state.Dependency = new WallCollisionJob
+            {
+                fieldSize = DataBurst.FieldSize * 0.5f,
+
+            }.ScheduleParallel(state.Dependency);
         }
 
         [BurstCompile(OptimizeFor = OptimizeFor.Performance)]
         public partial struct WallCollisionJob : IJobEntity
         {
+            public float3 fieldSize;
+
             private void Execute(ref LocalTransform transform, ref Velocity velocity)
             {
                 float3 position = transform.Position;
-                if (math.abs(position.x) > DataBurst.FieldSize.x * .5f)
+                float3 currentVelocity = velocity.Value;
+
+                if (math.abs(position.x) > fieldSize.x)
                 {
-                    position.x = (DataBurst.FieldSize.x * .5f) *  math.sign(position.x);
-                    velocity.Value.x *= -.5f;
-                    velocity.Value.y *= .8f;
-                    velocity.Value.z *= .8f;
+                    position.x = fieldSize.x * math.sign(position.x);
+                    currentVelocity *= new float3(-0.5f, 0.8f, 0.8f);
                 }
 
-                if (math.abs(position.z) > DataBurst.FieldSize.z * .5f)
+                if (math.abs(position.z) > fieldSize.z)
                 {
-                    position.z = (DataBurst.FieldSize.z * .5f) * math.sign(position.z);
-                    velocity.Value.z *= -.5f;
-                    velocity.Value.x *= .8f;
-                    velocity.Value.y *= .8f;
+                    position.z = fieldSize.z * math.sign(position.z);
+                    currentVelocity *= new float3(0.8f, 0.8f, -0.5f);
                 }
 
-                if (math.abs(position.y) > DataBurst.FieldSize.y * .5f)
+                if (math.abs(position.y) > fieldSize.y)
                 {
-                    position.y = (DataBurst.FieldSize.y * .5f) * math.sign(position.y);
-                    velocity.Value.y *= -.5f;
-                    velocity.Value.z *= .8f;
-                    velocity.Value.x *= .8f;
+                    position.y = fieldSize.y * math.sign(position.y);
+                    currentVelocity *= new float3(0.8f, -0.5f, 0.8f);
                 }
 
                 transform.Position = position;
+                velocity.Value = currentVelocity;
             }
         }
 

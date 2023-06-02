@@ -5,11 +5,9 @@ using UnityEngine;
 using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Burst.Intrinsics;
-using UnityEngine.Profiling;
 using Unity.Jobs;
 using Unity.Burst.CompilerServices;
 using static DOTS.BeePositionUpdateSystem;
-using Unity.Entities.UniversalDelegates;
 
 namespace DOTS
 {
@@ -92,11 +90,10 @@ namespace DOTS
             public ComponentLookup<EntityPosition> transformLookup;
             [ReadOnly]
             public ComponentTypeHandle<LocalTransform> transformHandle;
-            //[ReadOnly]
-            public ComponentTypeHandle<Target> targetHandle;
-
             [ReadOnly]
             public ComponentLookup<Alive> aliveLookup;
+            
+            public ComponentTypeHandle<Target> targetHandle;
 
             public void Execute(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask, in v128 chunkEnabledMask)
             {
@@ -139,7 +136,7 @@ namespace DOTS
                     if (sqrDist < Data.hitDistance * Data.hitDistance)
                     {
                         //Ecb.AddComponent<Dead>(i, target.enemyTarget);
-                        Ecb.AddComponent(i, target.enemyTarget, new DeadTimer { time = 0.0f });
+                        Ecb.SetComponent(i, target.enemyTarget, new DeadTimer { time = 0.0f });
                         //Ecb.RemoveComponent<Alive>(chunkIndex, target.enemyTarget);
                         //Mark as dead
                         Ecb.SetComponentEnabled<Alive>(i, target.enemyTarget, false);

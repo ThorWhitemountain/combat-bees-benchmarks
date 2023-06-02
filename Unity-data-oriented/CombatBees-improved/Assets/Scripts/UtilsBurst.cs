@@ -5,6 +5,7 @@ using Unity.Burst;
 using Unity.Mathematics;
 using Random = UnityEngine.Random;
 
+[BurstCompile]
 public static class UtilsBurst
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

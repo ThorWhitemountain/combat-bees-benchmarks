@@ -108,7 +108,7 @@ namespace DOTS
 
 
 
-        [BurstCompile(OptimizeFor = OptimizeFor.Performance,FloatMode = FloatMode.Fast, FloatPrecision = FloatPrecision.Standard)]
+        [BurstCompile(OptimizeFor = OptimizeFor.Performance, FloatMode = FloatMode.Fast, FloatPrecision = FloatPrecision.Standard)]
         public partial struct MovementJobChunk : IJobChunk
         {
             public float deltaTime;
