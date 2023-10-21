@@ -1,3 +1,26 @@
+October 2023 - Update
+
+Unity editor upgrade.
+Entities upgrade to 1.1.0-pre.1
+Custom fork from Tertle that is syncless. Same for Unity.physics 
+https://github.com/tertle/com.unity.entities
+https://github.com/tertle/com.unity.physics
+
+[**important**] Added a warmup period before the fps counting begins. To make sure that the inital overhead of starting everything doesn't affect the scores. As for the first ~2-3 seconds the fps is significantly lower than when it stabilizes.
+This does change the benchmark behaviour a bit. But it better measures _DOTS vs Assembly_, instead of _DOTS + unity startup overhead vs Assembly_
+Therefore I think this is a better test. Since you would never judge a games performance, based on the first 3 seconds, if theres a lag spike when loading the world or smth. 
+calculatebeecount now only calculates bee Entity count.
+
+30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
+
+Leak detection, saftety checks, and jobs debugger turned off.
+**DOTS EDITOR**: 6090 (203 fps)
+
+**DOTS BUILD**: 8580 (286 fps) 
+
+**ASSEMBLY BUILD**: 10065 (335 fps)
+
+
 # combat-bees-benchmarks
 Benchmarks of different versions of a simple bee simulation to compare the performance of different programming languages and game engines/frameworks
 
