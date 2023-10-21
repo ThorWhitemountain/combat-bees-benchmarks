@@ -8,7 +8,6 @@ using UnityEngine;
 
 namespace DOTS
 {
-
     [BurstCompile]
     [UpdateBefore(typeof(TransformSystemGroup))]
     [UpdateAfter(typeof(BeeMovementSystem))]
@@ -33,11 +32,6 @@ namespace DOTS
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            //state.Dependency = new BeePositionUpdateJob
-            //{
-            //    deltaTime = state.WorldUnmanaged.Time.DeltaTime
-            //}.ScheduleParallel(state.Dependency);
-
             transformHandle.Update(ref state);
             velocityHandle.Update(ref state);
             positionHandle.Update(ref state);
@@ -51,12 +45,10 @@ namespace DOTS
             }.ScheduleParallel(bees, state.Dependency);
         }
 
-
         public struct EntityPosition : IComponentData
         {
             public float3 Position;
         }
-
 
         [BurstCompile(OptimizeFor = OptimizeFor.Performance)]
         public partial struct BeePositionUpdateJobChunk : IJobChunk
@@ -77,7 +69,6 @@ namespace DOTS
                 NativeArray<EntityPosition> positions = chunk.GetNativeArray(ref positionHandle);
                 NativeArray<Velocity> velocities = chunk.GetNativeArray(ref velocityHandle);
                 var enumerator = new ChunkEntityEnumerator(useEnabledMask, chunkEnabledMask, chunk.Count);
-
                 while (enumerator.NextEntityIndex(out int i))
                 {
                     LocalTransform transform = transforms[i];
@@ -89,15 +80,15 @@ namespace DOTS
             }
         }
 
-        [BurstCompile]
-        public partial struct BeePositionUpdateJob : IJobEntity
-        {
-            public float deltaTime;
+        //[BurstCompile]
+        //public partial struct BeePositionUpdateJob : IJobEntity
+        //{
+        //    public float deltaTime;
 
-            private void Execute(ref LocalTransform transform, in Velocity velocity)
-            {
-                transform.Position += velocity.Value * deltaTime;
-            }
-        }
+        //    private void Execute(ref LocalTransform transform, in Velocity velocity)
+        //    {
+        //        transform.Position += velocity.Value * deltaTime;
+        //    }
+        //}
     }
 }

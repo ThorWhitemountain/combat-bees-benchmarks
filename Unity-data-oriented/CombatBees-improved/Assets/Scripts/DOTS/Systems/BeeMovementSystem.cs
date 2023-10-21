@@ -150,11 +150,11 @@ namespace DOTS
                     velocity.Value += randomVector * jitterFactor;
                     velocity.Value *= 1f - dampingFactor;
 
-
+                        
                     //Move towards random ally
                     float3 beePosition = transform.Position;
                     //Get a random entitiy, and then get its LocalToWorld component
-                    int allyIndex = random.generator.NextInt(aliveBeesCount);
+                    int allyIndex = random.generator.NextInt(aliveBeesCount-1);
 
                     //RANDOM LOOKUP VERY DEMANDING
                     float3 allyPosition = allyPositions[allyIndex].Position;
@@ -165,9 +165,10 @@ namespace DOTS
                     velocity.Value += delta * (teamAttraction / dist);
 
                     //Move away from random ally
-                    allyIndex = random.generator.NextInt(aliveBeesCount);
+                    //allyIndex = random.generator.NextInt(aliveBeesCount);
                     //RANDOM LOOKUP VERY DEMANDING
-                    allyPosition = allyPositions[allyIndex].Position;
+                    // last allyindex + 1 since it's next to the last bee, can give better memory speeds, since it's in the just loaded cache line
+                    allyPosition = allyPositions[allyIndex+1].Position;
 
                     delta = allyPosition - beePosition;
                     dist = math.sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);

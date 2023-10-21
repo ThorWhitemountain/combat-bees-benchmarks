@@ -11,13 +11,15 @@ class SpawnerBaker : Baker<SpawnerAuthoring>
 {
     public override void Bake(SpawnerAuthoring authoring)
     {
-        var entity = GetEntity(TransformUsageFlags.None);
+        Entity entity = GetEntity(TransformUsageFlags.None);
+        Entity blueBee = GetEntity(authoring.BlueBee, TransformUsageFlags.Dynamic);
+        Entity yellowBee = GetEntity(authoring.YellowBee, TransformUsageFlags.Dynamic);
         AddComponent(entity, new Spawner
         {
             // By default, each authoring GameObject turns into an Entity.
             // Given a GameObject (or authoring component), GetEntity looks up the resulting Entity.
-            BlueBee = GetEntity(authoring.BlueBee, TransformUsageFlags.Dynamic),
-            YellowBee = GetEntity(authoring.YellowBee, TransformUsageFlags.Dynamic),
+            BlueBee = blueBee,
+            YellowBee = yellowBee,
             Team1SpawnPosition = DataBurst.Team1BeeSpawnPos,
             Team2SpawnPosition = DataBurst.Team2BeeSpawnPos
         });
