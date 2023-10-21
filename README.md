@@ -14,6 +14,7 @@ calculatebeecount now only calculates bee Entity count.
 30 seconds frame benches (Ryzen 3900XT @ 4.3ghz, RX 6750XT):
 
 Leak detection, saftety checks, and jobs debugger turned off.
+
 **DOTS EDITOR**: 6090 (203 fps)
 
 **DOTS BUILD**: 8580 (286 fps) 
