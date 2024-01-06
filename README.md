@@ -163,3 +163,34 @@ Remove structual components - DOTS: 5330 + ~3%
 
 The target system has been converted to one job for each team, which means we send in half the data (native array of entity) and we can remove a logical condition which should help the performance.
 I have moved the random lookup for the alive component back into the attacksystem instead of the targetsystem, since it feels better to just have all the slow random lookups in the same system, as the target job is now around 1ms
+
+
+----- COMPONENT LOOKUP -----
+
+Just tested out a suspicion i had (Since I use a similar solution for my game, but at a lower entity count, so it's relevant for me aswell),
+and it seems like the componentlookup performance doesn't scale linearly with the number of bees...
+
+The movementsystem (which uses random array lookups)
+scales linearly-ish with the number of bees, with around an additional 1ms per 10k bees added,
+
+1ms for 10k bees
+2.1 ms for 20k bees
+4.2ms for 40k bees
+8.4 ms for 80k bees
+11 ms for 100k bees
+22 ms for 200k bees
+
+
+
+The attacksystem (which uses component lookups) scales non linearly where
+doubling the number of bees, makes the time taken worse than double up
+
+0.6ms for 10k bees
+1.2 ms for 20k bees - 2x ms for 2x bees
+2.7ms for 40k bees - 2.25x ms, for 2x bees
+6.8ms for 80k bees - 2.5x ms, for 2x bees
+9.7ms for 100k bees - 1.42x ms for 1.25x bees
+25.5 ms for 200k bees - 2.6x ms for 2x bees
+
+So it could be that the performance with DOTS is better than, or atleast closer to the assembly performance at lower bee counts
+
